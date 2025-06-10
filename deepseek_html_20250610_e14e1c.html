@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRYSON - PROFILE GUARD</title>
+    <meta name="description" content="A web application to check Facebook tokens and manage profile guard settings. Secure your Facebook profile with ease.">
+    <meta property="og:title" content="Bryson Profile Guard - Facebook Token Checker">
+    <meta property="og:description" content="A web application to check Facebook tokens and manage profile guard settings. Secure your Facebook profile with ease.">
+    <meta property="og:image" content="8fc967d9-42f0-4f1a-a480-a5adc2c723d3.jpg">
+    <meta property="og:url" content="https:www.profileguard-by-polongdev.onrender.com">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #f43f5e;
+            --dark: #1e293b;
+            --darker: #0f172a;
+            --light: #f8fafc;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+            min-height: 100vh;
+            color: var(--light);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+        }
+
+        .glow-effect {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glow-effect::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(99, 102, 241, 0),
+                rgba(99, 102, 241, 0.1),
+                rgba(99, 102, 241, 0)
+            );
+            transform: rotate(30deg);
+            animation: glow 6s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes glow {
+            0% { transform: rotate(30deg) translate(-10%, -10%); }
+            100% { transform: rotate(30deg) translate(10%, 10%); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+            margin: 15% auto;
+            padding: 25px;
+            border-radius: 16px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .close {
+            color: #aaa;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close:hover {
+            color: var(--light);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: var(--dark);
+            color: var(--light);
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 30px;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 40px;
+        }
+
+        .toast.success {
+            background-color: #10b981;
+        }
+
+        .toast.error {
+            background-color: var(--secondary);
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .info-value {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            outline: none;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary), #e11d48);
+            color: white;
+            box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(244, 63, 94, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--light);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            font-size: 16px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .ping-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .ping-good {
+            background-color: #10b981;
+            box-shadow: 0 0 10px #10b981;
+        }
+
+        .ping-ok {
+            background-color: #f59e0b;
+            box-shadow: 0 0 10px #f59e0b;
+        }
+
+        .ping-bad {
+            background-color: #ef4444;
+            box-shadow: 0 0 10px #ef4444;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-active {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .status-inactive {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            border-radius: 50%;
+            filter: blur(40px);
+        }
+
+        .shape-1 {
+            width: 300px;
+            height: 300px;
+            background: var(--primary);
+            top: -100px;
+            left: -100px;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        .shape-2 {
+            width: 400px;
+            height: 400px;
+            background: var(--secondary);
+            bottom: -150px;
+            right: -100px;
+            animation: float 18s infinite ease-in-out;
+            animation-delay: 2s;
+        }
+
+        .shape-3 {
+            width: 200px;
+            height: 200px;
+            background: #10b981;
+            top: 30%;
+            right: 20%;
+            animation: float 12s infinite ease-in-out;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, 20px); }
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                margin: 30% auto;
+                width: 90%;
+            }
+            
+            .btn {
+                padding: 10px 18px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body class="relative overflow-x-hidden">
+    <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-3xl">
+        <div class="flex justify-between items-center mb-8">
+            <div id="time" class="text-lg font-medium flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="time-text"></span>
+            </div>
+            <div id="ping" class="text-lg font-medium flex items-center">
+                <span id="ping-indicator" class="ping-indicator ping-good"></span>
+                <span id="ping-text">0 ms</span>
+            </div>
+        </div>
+
+        <div class="glass-card glow-effect p-8 mb-8 animate__animated animate__fadeIn">
+            <div class="text-center mb-6">
+                <h1 class="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-pink-500">BRYSON PROFILE GUARD</h1>
+                <p class="text-gray-300">Secure your Facebook profile with advanced protection</p>
+            </div>
+        </div>
+
+        <div id="mainContent" class="glass-card p-6 animate__animated animate__fadeInUp">
+            <div class="mb-6">
+                <label for="token" class="block text-sm font-medium text-gray-300 mb-2">Facebook Access Token</label>
+                <input type="text" id="token" class="input-field" placeholder="Paste your Facebook token here">
+                <p class="text-xs text-gray-400 mt-2">This token will be used to verify and manage your profile security settings</p>
+            </div>
+            <div class="flex justify-center">
+                <button id="checkToken" class="btn btn-primary w-full max-w-xs">
+                    <span id="checkTokenText">Verify Token</span>
+                    <svg id="checkTokenSpinner" class="hidden animate-spin -mr-1 ml-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="userInfo" class="hidden glass-card p-6 mt-6 animate__animated animate__fadeInUp">
+            <div class="text-center mb-6">
+                <img id="userAvatar" class="avatar mx-auto mb-4" src="" alt="User Avatar">
+                <h2 id="userName" class="text-2xl font-bold mb-1"></h2>
+                <div class="flex justify-center items-center">
+                    <span id="userStatus" class="status-badge status-inactive mr-2">Inactive</span>
+                    <span id="userId" class="text-sm text-gray-400"></span>
+                </div>
+            </div>
+
+            <div class="info-card mb-6">
+                <div class="info-row">
+                    <span class="info-label">Email</span>
+                    <span id="userEmail" class="info-value">Loading...</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Birthday</span>
+                    <span id="userBirthday" class="info-value">Loading...</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Location</span>
+                    <span id="userLocation" class="info-value">Loading...</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <button id="turnOnShield" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                    </svg>
+                    Enable Protection
+                </button>
+                <button id="turnOffShield" class="btn btn-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l3.5-3.5L3 8a6 6 0 0110-2.236A6 6 0 0118 8z" clip-rule="evenodd" />
+                    </svg>
+                    Disable Protection
+                </button>
+            </div>
+
+            <div class="text-center">
+                <button id="backToMain" class="btn btn-outline">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Back to Main
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingModal" class="modal">
+        <div class="modal-content animate__animated animate__zoomIn">
+            <span class="close" id="closeLoadingModal">&times;</span>
+            <div class="text-center">
+                <svg class="animate-spin mx-auto h-12 w-12 text-indigo-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <h3 class="text-xl font-semibold mb-2">Processing Request</h3>
+                <p class="text-gray-300 mb-4">Please wait while we secure your profile</p>
+                <div class="progress-container">
+                    <div id="progressBarFill" class="progress-bar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="errorModal" class="modal">
+        <div class="modal-content animate__animated animate__zoomIn">
+            <span class="close" id="closeErrorModal">&times;</span>
+            <div class="text-center">
+                <svg class="mx-auto h-12 w-12 text-red-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="text-xl font-semibold mb-2">Error Occurred</h3>
+                <p id="errorMessage" class="text-gray-300 mb-4">Failed to process your request</p>
+                <button id="closeErrorModalBtn" class="btn btn-secondary px-8">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">
+        <div id="desc"></div>
+    </div>
+
+    <script>
+        const loadingModal = document.getElementById('loadingModal');
+        const errorModal = document.getElementById('errorModal');
+        const errorMessage = document.getElementById('errorMessage');
+        const closeLoadingModal = document.getElementById('closeLoadingModal');
+        const closeErrorModal = document.getElementById('closeErrorModal');
+        const closeErrorModalBtn = document.getElementById('closeErrorModalBtn');
+        const toast = document.getElementById('toast');
+        const desc = document.getElementById('desc');
+        const mainContent = document.getElementById('mainContent');
+        const userInfo = document.getElementById('userInfo');
+        const checkTokenSpinner = document.getElementById('checkTokenSpinner');
+        const checkTokenText = document.getElementById('checkTokenText');
+
+        closeLoadingModal.onclick = function() {
+            loadingModal.style.display = "none";
+        };
+
+        closeErrorModal.onclick = function() {
+            errorModal.style.display = "none";
+        };
+
+        closeErrorModalBtn.onclick = function() {
+            errorModal.style.display = "none";
+        };
+
+        window.onclick = function(event) {
+            if (event.target === loadingModal) {
+                loadingModal.style.display = "none";
+            } else if (event.target === errorModal) {
+                errorModal.style.display = "none";
+            }
+        };
+
+        function showToast(message, type) {
+            desc.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.className = toast.className.replace("show", "");
+            }, 3000);
+        }
+
+        function updateProgressBar() {
+            const progressBarFill = document.getElementById('progressBarFill');
+            let width = 0;
+            const interval = setInterval(() => {
+                if (width >= 100) {
+                    clearInterval(interval);
+                } else {
+                    width++;
+                    progressBarFill.style.width = width + '%';
+                }
+            }, 30);
+        }
+
+        document.getElementById('checkToken').addEventListener('click', async () => {
+            const token = document.getElementById('token').value;
+            try {
+                // Show loading state on button
+                document.getElementById('checkToken').disabled = true;
+                checkTokenSpinner.classList.remove('hidden');
+                checkTokenText.textContent = "Verifying...";
+                
+                loadingModal.style.display = 'block';
+                updateProgressBar();
+                const response = await axios.post('/api/checkToken', { token });
+                loadingModal.style.display = 'none';
+                
+                // Reset button state
+                document.getElementById('checkToken').disabled = false;
+                checkTokenSpinner.classList.add('hidden');
+                checkTokenText.textContent = "Verify Token";
+                
+                const userData = response.data;
+                if (userData.error) {
+                    throw new Error(userData.error);
+                }
+                mainContent.style.display = 'none';
+                userInfo.classList.remove('hidden');
+                document.getElementById('userAvatar').src = userData.picture.data.url;
+                document.getElementById('userName').textContent = userData.name;
+                document.getElementById('userEmail').textContent = userData.email || 'Not provided';
+                document.getElementById('userId').textContent = `ID: ${userData.id}`;
+                document.getElementById('userBirthday').textContent = userData.birthday || 'Not provided';
+                document.getElementById('userLocation').textContent = userData.location?.name || 'Not provided';
+                document.getElementById('turnOnShield').dataset.userId = userData.id;
+                document.getElementById('turnOffShield').dataset.userId = userData.id;
+                
+                // Update status badge
+                const statusBadge = document.getElementById('userStatus');
+                statusBadge.textContent = 'Verified';
+                statusBadge.className = 'status-badge status-active mr-2';
+                
+                showToast('Token verified successfully', 'toast success');
+            } catch (error) {
+                loadingModal.style.display = 'none';
+                // Reset button state
+                document.getElementById('checkToken').disabled = false;
+                checkTokenSpinner.classList.add('hidden');
+                checkTokenText.textContent = "Verify Token";
+                
+                errorMessage.textContent = error.response?.data?.error || 'Failed to check token';
+                errorModal.style.display = 'block';
+                showToast('Failed to check token', 'toast error');
+            }
+        });
+
+        document.getElementById('turnOnShield').addEventListener('click', async () => {
+            const token = document.getElementById('token').value;
+            const userId = document.getElementById('turnOnShield').dataset.userId;
+            try {
+                loadingModal.style.display = 'block';
+                updateProgressBar();
+                const response = await axios.post('/api/turnOnShield', { token, id: userId });
+                loadingModal.style.display = 'none';
+                showToast('Profile protection enabled', 'toast success');
+                
+                // Update status badge
+                const statusBadge = document.getElementById('userStatus');
+                statusBadge.textContent = 'Protected';
+                statusBadge.className = 'status-badge status-active mr-2';
+            } catch (error) {
+                loadingModal.style.display = 'none';
+                errorMessage.textContent = error.response?.data?.error || 'Failed to enable protection';
+                errorModal.style.display = 'block';
+                showToast('Failed to enable protection', 'toast error');
+            }
+        });
+
+        document.getElementById('turnOffShield').addEventListener('click', async () => {
+            const token = document.getElementById('token').value;
+            const userId = document.getElementById('turnOffShield').dataset.userId;
+            try {
+                loadingModal.style.display = 'block';
+                updateProgressBar();
+                const response = await axios.post('/api/turnOffShield', { token, id: userId });
+                loadingModal.style.display = 'none';
+                showToast('Profile protection disabled', 'toast success');
+                
+                // Update status badge
+                const statusBadge = document.getElementById('userStatus');
+                statusBadge.textContent = 'Unprotected';
+                statusBadge.className = 'status-badge status-inactive mr-2';
+            } catch (error) {
+                loadingModal.style.display = 'none';
+                errorMessage.textContent = error.response?.data?.error || 'Failed to disable protection';
+                errorModal.style.display = 'block';
+                showToast('Failed to disable protection', 'toast error');
+            }
+        });
+
+        document.getElementById('backToMain').addEventListener('click', () => {
+            userInfo.classList.add('hidden');
+            mainContent.style.display = 'block';
+            document.getElementById('token').value = '';
+        });
+
+        function measurePing() {
+            var xhr = new XMLHttpRequest();
+            var startTime, endTime;
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    endTime = Date.now();
+                    var pingTime = endTime - startTime;
+                    document.getElementById("ping-text").textContent = pingTime + " ms";
+                    
+                    // Update ping indicator
+                    const pingIndicator = document.getElementById("ping-indicator");
+                    if (pingTime < 100) {
+                        pingIndicator.className = "ping-indicator ping-good";
+                    } else if (pingTime < 300) {
+                        pingIndicator.className = "ping-indicator ping-ok";
+                    } else {
+                        pingIndicator.className = "ping-indicator ping-bad";
+                    }
+                }
+            };
+            xhr.open("GET", location.href + "?t=" + new Date().getTime());
+            startTime = Date.now();
+            xhr.send();
+        }
+        setInterval(measurePing, 1000);
+
+        function updateTime() {
+            const now = new Date();
+            const options = {
+                timeZone: 'Asia/Manila',
+                hour12: true,
+                hour: 'numeric',
+                minute: 'numeric',
+                second: 'numeric'
+            };
+            const formattedTime = now.toLocaleString('en-US', options);
+            document.getElementById('time-text').textContent = formattedTime;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>
